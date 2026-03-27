@@ -1,6 +1,5 @@
 import { MapContainer, TileLayer,GeoJSON, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import world from '../assets/world_polygons.json';
 import {useState, useEffect, useRef} from 'react'
 
 function MapDragHandler({ setDragging }) { /* allows for dragging over map control div */
@@ -45,14 +44,14 @@ function MapVisualisation({geo, metric, geos, getPresetGeo, presetData, data, se
                 /*url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"*/
                 url='https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png'
             />
-            <GeoJSON ref={geoRef} />
+            <GeoJSON data={geo} ref={geoRef} />
             <div className='col-start-2 bg-white z-1000 h-40 m-5 rounded-md shadow-md' onMouseOver={()=>{if (!dragging) setDrag(false)}} onMouseOut={()=>{if (!dragging) setDrag(true)}}>
                 <select onChange={(e) => {getPresetGeo(e.target.value)}}>
                     <option value='-1'>Custom</option>
                     {geos ? 
                         geos.map(
                             (g) => (
-                                <option value={g['geodata_id']} key={g['geodata_id']}>{g['name']}</option>
+                                <option value={g['geo_id']} key={g['geodata_id']}>{g['name']}</option>
                             )
                         ) : 
                         <></>

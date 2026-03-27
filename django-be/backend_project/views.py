@@ -1,7 +1,12 @@
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from django.contrib.auth.models import User
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.forms import UserCreationForm
 from django.http import HttpResponse, JsonResponse
-from .models import Admins, Datasets, Geodata
+from .models import Dataset, PresetGeo
+from django.db.models import F
 
 import geopandas as gpd
 import pandas as pd
@@ -9,36 +14,74 @@ from io import BytesIO
 import json
 
 def getDatasets(request):
-    data = list(Datasets.objects.filter(public='True').order_by('title').values())
+    data = list(Dataset.objects.filter(public='True').order_by('title').values('set_id','dataset','title','description','upload','update','update','user__username'))
     #data = list(Datasets.objects.values())
     return JsonResponse(data, safe=False)
     
 def getGeodata(request, id):
-    data = list(Geodata.objects.filter(geodata_id=id).values())
+    data = list(PresetGeo.objects.filter(geodata_id=id).values())
     return JsonResponse(data, safe=False)
     
 def getGeodatas(request):
-    data = list(Geodata.objects.order_by('name').values())
+    data = list(PresetGeo.objects.order_by('name').values())
     return JsonResponse(data, safe=False)
 
 def getDataset(request, id):
-    data = list(Datasets.objects.filter(set_id=id).values())
+    data = list(Dataset.objects.filter(set_id=id).values())
     return JsonResponse(data, safe=False)
-    
-@csrf_exempt # not ideal, opens door for csrf attacks https://stackoverflow.com/questions/6800894/django-returns-403-error-when-sending-a-post-request
+
+@csrf_exempt
+@require_POST
 def addDataset(request):
-    title_ = request.POST.get('title')
-    desc_ = request.POST.get('desc')
-    #file_ = request.FILES.get('file').read()
-    data_ = json.loads(request.POST.get('data'))
-    geo_ = request.POST.get('geo')
-    
-    dataset_ = Datasets(username=Admins('goose'), title=title_, description=desc_, dataset=data_, public=1)
-    dataset_.save()
-    
-    return JsonResponse(data_, safe=False)
+    username = request.POST.get('username')
+    title = request.POST.get('title')
+    desc = None if request.POST.get('desc') == '' else request.POST.get('desc')
+    dataset = request.POST.get('dataset')
+    public = True if request.POST.get('public') == 'Public' else False
+    preset = int(request.POST.get('preset'))
+    try:
+        upload = Dataset(dataset=json.loads(dataset), user=request.user, title=title, description=desc, public=public)
+        upload.save()
+        if preset > -1:
+            PresetGeo.objects.filter(geo_id=preset).update(usage=F('usage')+1)
+        return JsonResponse({'success': upload.set_id})
+    except Exception as e:
+        return JsonResponse({'error': e})
+
+    return JsonResponse({})
+
+@csrf_exempt
+@require_POST
+def updateViews(request):
+    id_ = request.POST.get('id')
+    Dataset.objects.filter(set_id=id_).update(views=F('views')+1)
+    return JsonResponse({'message':id_+' views updated'})
+
+@csrf_exempt
+@require_POST
+def updateSaves(request):
+    id_ = request.POST.get('id')
+    Dataset.objects.filter(set_id=id_).update(saves=F('saves')+1)
+    return JsonResponse({'message':id_+'saves updated'})
+
+@csrf_exempt
+@require_POST
+def addPreset(request):
+    username = request.POST.get('username')
+    name = request.POST.get('name')
+    geodata = request.POST.get('geodata')
+    user_id = User.objects.filter(username=username).values()[0]['id']
+    try:
+        upload = PresetGeo(name=name, geodata=json.loads(geodata), user=request.user)
+        upload.save()
+        return JsonResponse({'success': upload})
+    except Exception as e:
+        return JsonResponse({'error': e})
+
+    return JsonResponse({})
     
 @csrf_exempt
+@require_POST
 def getFile(request):
     file_ = request.FILES.get('file').read()
     accepted = ['application/json', 'application/geo+json','text/csv']
@@ -61,10 +104,93 @@ def getFile(request):
             
         return JsonResponse({'data': df.to_dict(orient='records'), 'geo': None}, safe=False)
 
+def current_user(request):
+    if request.user.is_authenticated:
+        return JsonResponse({
+            "username": request.user.username,
+            "email": request.user.email,
+        })
+    return JsonResponse({'loggedIn':'false '})
+
 @csrf_exempt
-def login(request):
+@require_POST
+def login_(request):
     user = request.POST.get('user')
     password = request.POST.get('password')
-    response = (Admins.objects.filter(username=user) | Admins.objects.filter(email=user)).filter(password=password).values()
-    print(response)
-    return HttpResponse('<p>nivdk</p>')
+    return authenticate_(request,user,password)
+
+def authenticate_(request,user_, password):
+    user = authenticate(username=user_, password=password)
+    if user:
+        login(request,user)
+        return JsonResponse({'success':'Logged in'})
+    else:
+        record = User.objects.filter(email=user_).values()
+        if record:
+            return authenticate_(request,record[0]['username'],password)
+            
+    return JsonResponse({'error':'Credentials do not match any accounts'})
+
+@csrf_exempt
+@require_POST
+def logout_(request):
+    logout(request)
+    return JsonResponse({'message':'Logged out'})
+
+@csrf_exempt
+@require_POST
+def delete_(request):
+    #user.is_active = False
+    #user.save()
+    request.user.delete()
+    logout(request)
+    return JsonResponse({'status':'Account deleted'})
+
+@csrf_exempt
+@require_POST
+def deleteDataset(request):
+    id_ = request.POST.get('id')
+    dataset = Dataset.objects.filter(set_id=id_,user=request.user).delete()
+    return JsonResponse({'status':'Dataset deleted successfully'})
+
+@csrf_exempt
+@require_POST
+def deletePreset(request):
+    id_ = request.POST.get('id')
+    preset = PresetGeo.objects.filter(geo_id=id_,user=request.user).delete()
+    return JsonResponse({'status':'Preset deleted successfully'})
+
+@csrf_exempt
+@require_POST
+def getUserSets(request):
+    datasets = list(Dataset.objects.filter(user=request.user).values().order_by('title'))
+    presets = list(PresetGeo.objects.filter(user=request.user).values().order_by('name'))
+    return JsonResponse({'datasets':datasets, 'presets':presets})
+
+@csrf_exempt
+@require_POST
+def register(request):
+    username = request.POST.get('username')
+    email = request.POST.get('email')
+    password = request.POST.get('password')
+
+    if User.objects.filter(username=username).values():
+        return JsonResponse({'error':'Username already exists, please try another username'})
+
+    if User.objects.filter(email=email).values():
+        return JsonResponse({'error':'Email already exists, please try another email'})
+
+    user = User.objects.create_user(username=username, email=email, password=password)
+    login(request,user)
+    return HttpResponse(JsonResponse({'success':'Account created'}))
+
+@csrf_exempt
+@require_POST
+def checkDatasetAuth(request):
+    if request.user.is_anonymous:
+        return JsonResponse({'error':'Not authorised'})
+    set_id = request.POST.get('set_id')
+    dataset = Dataset.objects.filter(set_id=set_id).filter(user=request.user).values()
+    if not dataset:
+        return JsonResponse({'status':'Not authorised'})
+    return JsonResponse({'status':'Authorised'})

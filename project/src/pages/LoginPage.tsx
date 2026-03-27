@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import Header from '../components/Header';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+axios.defaults.withCredentials = true;
 
 function LoginPage() {
+	const navigate = useNavigate();
 	const handleLogin = async (e,user, password) => {
 		e.preventDefault();
 		try {
@@ -11,7 +13,10 @@ function LoginPage() {
 		   	fd.append('user', user);
 		   	fd.append('password', password)
 		    const response = await axios.post('http://localhost:8000/backend/login',fd,);
-		    console.log(response);
+		    if (response.data['success']) {
+		    	return navigate('/account');
+		    }
+		    alert(response.data['error']);
 		} catch (err) {
 			console.log(err);
 		}
@@ -34,7 +39,7 @@ function LoginPage() {
 							<p className='absolute bg-gray-100 px-3 -translate-y-1/2 left-1/2 -translate-x-1/2 text-xs'>or</p>
 						</div>
 						<Link to='/register'>
-							<p className='text-center underline text-sm'>Create an account</p>
+							<p className='text-center underline 4text-sm'>Create an account</p>
 						</Link>
 					</div>
 				</div>

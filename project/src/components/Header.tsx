@@ -4,7 +4,7 @@ function Header({name, desc}) {
   return (
       <>
           <div className='m-auto w-200 max-w-screen'>
-           <header className='bg-teal-400 font-mono border max-w-full w-200 rounded-md px-3 flex fixed top-3 shadow-md z-50'> {/* z-50 for stick nav bar over map */}
+           <header className='bg-teal-400 font-mono border max-w-full w-200 rounded-md px-3 flex fixed top-3 shadow-md z-10000'> {/* z-50 for stick nav bar over map */}
               <div className='border-r-1 w-1/3 flex items-center'>
                   <h1 className='text-xl'>Header</h1>
               </div>

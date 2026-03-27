@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import axios from 'axios';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios'; axios.defaults.withCredentials = true;
 import Header from '../components/Header';
 import TableVisualisation from '../components/TableVisualisation';
 import MapVisualisation from '../components/MapVisualisation';
@@ -9,6 +9,9 @@ import {Resizable} from 'react-resizable'
 import "react-resizable/css/styles.css";
 
 function CreatePage() {
+	const [username, setUsername] = useState(null);
+	const nav = useNavigate();
+
 	const [title, setTitle] = useState('');
 	const [desc, setDesc] = useState('');
 	const [file, setFile] = useState(null);
@@ -16,6 +19,7 @@ function CreatePage() {
 	const [geos, setGeos] = useState(null);
 	const [geo, setGeo] = useState(null);
 	const [presetGeo, setPresetGeo] = useState(null);
+	const [presetGeoID, setPresetGeoID] = useState(-1);
 	const [data, setData] = useState({});
 	const [presetData, setPresetData] = useState(null);
 
@@ -27,11 +31,14 @@ function CreatePage() {
 
 	const [showBind, setShowBind] = useState(false);
 	const [showClear, setShowClear] = useState(false);
+	const [showUpload, setShowUpload] = useState(false);
+	const [showUploadPreset, setShowUploadPreset] = useState(false);
 
 	const containerRef = useRef(null);
 
     const getPresetGeo = (id) => {
-    	const geo_ = geos.find((g) => g['geodata_id'] == id);
+    	setPresetGeoID(id);
+    	const geo_ = geos.find((g) => g['geo_id'] == id);
     	if (geo_) {
     		const temp = {...geo_}
 			setPresetData(temp['geodata']['features'].map(
@@ -123,6 +130,54 @@ function CreatePage() {
 		/>
 	);
 
+	const handleUpload = (upload) => {
+		setShowUpload(false);
+		if (title == "") {
+			return alert('The title cannont be empty!')
+		} else if (!upload || !upload['features'] || upload['features'].length == 0) {
+			return alert('The current cannot be uploaded, please try again');
+		} else if (upload['features'][0]['id'] && !presetGeo) {
+			return setShowUploadPreset(true)
+		}
+		uploadGeo(upload);
+	};
+
+	const uploadGeo = async (upload) => {
+		try {
+			const fd = new FormData();
+        	fd.append('username', username);
+        	fd.append('title', title);
+        	fd.append('desc', desc);
+        	fd.append('public', document.getElementById('upload_type').value)
+        	fd.append('dataset', JSON.stringify(upload));
+        	fd.append('preset', presetGeoID);
+        	const response = await axios.post('http://localhost:8000/backend/upload-geo',fd,);
+        	nav(`/view/${response.data['success']}`);
+		} catch (err) {
+			alert(err)
+		}
+	};
+
+	const uploadPreset = async (upload) => {
+		const preset = {...upload,
+            features: upload['features'].map(
+                (f) => ({
+                    ...f,
+                    properties: {}
+                })
+            )
+        };
+        try {
+        	const fd = new FormData();
+        	fd.append('username', username);
+        	fd.append('name', title);
+        	fd.append('geodata', JSON.stringify(preset));
+        	const response = await axios.post('http://localhost:8000/backend/upload-preset',fd,);
+        } catch (err) {
+        	console.log(err);
+        }
+	};
+
 	useEffect(() => {
 		if (!file) return;
 		(async () => {
@@ -138,22 +193,32 @@ function CreatePage() {
     	})();
 	}, [file]);
 
-	useEffect(() => {
-        fetch('http://localhost:8000/backend/get-geodatas') // fetches json promise
+	useEffect(() => { /* function to fetch all preset geodata sets */
+        fetch('http://localhost:8000/backend/get-geodatas')
             .then(r => r.json())
             .then(g => {
                 setGeos(g);
             });
     }, []);
 
-    
+    useEffect(() => { /* funtion to get the current user, i.e. if they are logged in and who the upload is made by */
+		(async () => {
+			const response = await axios.get('http://localhost:8000/backend/current-user');
+			if (response.data['username']) {
+				setUsername(response.data['username']);
+			}
+		})()
+    }, []);
+
     useEffect(()=>{ /* to resize table sizbar depending on the size of the container div (map_table_container) */
     	if (!containerRef.current) return;
 		const resizeObserver = new ResizeObserver(() => {
-			const ele_width = document.getElementById('map_table_container').offsetWidth;
-			if (s_width == maxSWidth) setS_width(ele_width);
-			setMaxSWidth(ele_width);
-			if (s_width > ele_width) setS_width(ele_width);
+			if (document.getElementById('map_table_container')) {
+				const ele_width = document.getElementById('map_table_container').offsetWidth;
+				if (s_width == maxSWidth) setS_width(ele_width);
+				setMaxSWidth(ele_width);
+				if (s_width > ele_width) setS_width(ele_width);
+			}
 		});
 		resizeObserver.observe(containerRef.current);
 		return () => resizeObserver.disconnect(); // clean up 
@@ -172,7 +237,7 @@ function CreatePage() {
 							<MapVisualisation geo={presetGeo ? presetGeo: geo } metric={metric} geos={geos} getPresetGeo={getPresetGeo} presetData={presetData} data={data} setShowBind={setShowBind} />
 						</div>
 						{data.length > 0 || presetData ?
-							<Resizable className='col-start-1 row-start-1' width={s_width} height={0} axis="x" resizeHandles={["e"]} handle={<LeftResizeHandle />} onResize={(e, { size }) => {setS_width(size.width); setIsResizing(true);}} onResizeStop={(e, { size }) => {window.dispatchEvent(new Event("resize")); setIsResizing(false);}} minConstraints={[50, 0]} maxConstraints={[maxSWidth, 0]}>
+							<Resizable className='col-start-1 row-start-1' width={s_width} height={0} axis="x" resizeHandles={["e"]} handle={<LeftResizeHandle />} onResize={(e, { size }) => {setS_width(size.width); setIsResizing(true);}} onResizeStop={(e, { size }) => {window.dispatchEvent(new Event("resize")); setIsResizing(false);}} minConstraints={[20, 0]} maxConstraints={[maxSWidth, 0]}>
 								<div className='min-h-0 bg-white p-3 overflow-hidden'>
 									<div className={`${isResizing ? `overflow-hidden`: `overflow-scroll`} min-h-0 h-full col-start-2 rounded-md border border-gray-300 relative`}>
 										<TableVisualisation data={presetData ? presetData: data} geo={presetGeo ? presetGeo: geo} presetGeo={presetGeo} setData={presetData ? setPresetData: setData} setGeo={presetGeo ? setPresetGeo: setGeo} />
@@ -183,7 +248,6 @@ function CreatePage() {
 						}
 					</div>
 				</div>
-
 				<div className={`col-start-1 font-mono col-span-2 lg:col-span-1 md:col-start-2 grid grid-rows-[1fr_auto_auto] h-150`}>
 					<div className='w-full h-full bg-white rounded-md p-3 row-start-1 grid grid-rows-[auto_1fr]'>
 						<input type='text' placeholder='Title...' spellCheck='false' value={title} onChange={(e)=>{setTitle(e.target.value)}} className={`w-full text-1xl rounded-md border border-gray-300 px-1 ${title != "" ? 'underline font-bold' : ''}`}/>
@@ -200,18 +264,18 @@ function CreatePage() {
 									</label>
 								</div>
 								<div className='px-1 w-full'>
-									<button className='bg-white w-full shadow-md rounded-md' onClick={()=>setShowClear(true)}>Clear</button>
+									<button className='bg-white w-full shadow-md rounded-md cursor-pointer' onClick={()=>setShowClear(true)}>Clear</button>
 								</div>
 							</div>
 							<div className='p-1 flex justify-center'>
-								<button className='bg-white shadow-md rounded-md w-1/2' onClick={()=>save2(presetGeo)}>Save</button>
+								<button className={`bg-white shadow-md rounded-md w-1/2 ${username != null && `cursor-pointer`}`} onClick={()=>save2(presetGeo)}>Save</button>
 							</div>
 						</div>
 					</div>
 
-					<div className=''>
-						<button className='bg-white shadow-md rounded-md w-3/4'>Upload</button>
-						<select className='w-1/4'>
+					<div className='flex'>
+						<button className={`bg-white shadow-md rounded-md w-3/4 ${username ? `cursor-pointer`: `cursor-not-allowed`}`} disabled={username==null} onClick={()=>setShowUpload(true)}>Upload</button>
+						<select id='upload_type'>
 							<option>Public</option>
 							<option>Private</option>
 						</select>
@@ -257,7 +321,7 @@ function CreatePage() {
 						    </div>
 						    <div className='col-start-2 flex items-center justify-center gap-2 mt-1'>
 					    		<button className='row-start-1 gap-2 px-3 py-1 bg-gray-200 rounded cursor-pointer' onClick={()=>{setShowBind(false)}}>Cancel</button>
-					    		<button className='row-start-1 px-3 py-1 bg-blue-500 text-white rounded cursor-pointer' disabled={true} onClick={()=>bind(document.getElementById('binder').value)}>Add</button>
+					    		<button className='row-start-1 px-3 py-1 bg-blue-500 text-white rounded cursor-pointer' onClick={()=>bind(document.getElementById('binder').value)}>Add</button>
 					    	</div>
 					    </div>
 				    </div>
@@ -272,6 +336,35 @@ function CreatePage() {
                         <div className="flex justify-center gap-2">
                             <button onClick={() => setShowClear(false)} className="px-3 py-1 bg-gray-200 rounded cursor-pointer">No</button>
                             <button className="px-3 py-1 bg-blue-500 text-white rounded cursor-pointer" onClick={()=>window.location.reload()}>Yes</button>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            {showUpload &&
+            	<div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+                    <div className="bg-white p-5 rounded-md shadow-lg w-80">
+                        <h2 className="font-bold mb-3">Are you sure you want to upload current dataset?</h2>
+
+                        <div className="flex justify-center gap-2">
+                            <button onClick={() => setShowUpload(false)} className="px-3 py-1 bg-gray-200 rounded cursor-pointer">No</button>
+                            <button className="px-3 py-1 bg-blue-500 text-white rounded cursor-pointer" onClick={()=>{handleUpload( presetGeo ? presetGeo: geo )}}>Yes</button>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            {showUploadPreset &&
+            	<div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+                    <div className="bg-white p-5 rounded-md shadow-lg w-80">
+                        <h2 className="font-bold mb-3">Your dataset meets the requirements to be used as preset. Would you like to upload a preset for others to use?</h2>
+
+                        <div className="flex justify-center gap-2">
+                            <button onClick={() => {setShowUploadPreset(false); uploadGeo(presetGeo ? presetGeo: geo)}} className="px-3 py-1 bg-gray-200 rounded cursor-pointer">No</button>
+                            <button className="px-3 py-1 bg-blue-500 text-white rounded cursor-pointer" onClick={()=>{setShowUploadPreset(false); uploadPreset(presetGeo ? presetGeo: geo); uploadGeo(presetGeo ? presetGeo: geo);}}>Yes</button>
+                        </div>
+                        <div className='flex justify-center mt-2'>
+                        	<button className='px-3 py-1 bg-gray-200 rounded cursor-pointer' onClick={()=>setShowUploadPreset(false)}>Cancel</button>
                         </div>
                     </div>
                 </div>

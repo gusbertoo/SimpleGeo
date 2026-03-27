@@ -1,9 +1,28 @@
 import { useState } from 'react'
 import Header from '../components/Header';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+axios.defaults.withCredentials = true;
 
-function LoginPage() {
+function RegisterPage() {
+
+	const navigate = useNavigate();
+	const handleRegister = async (username, email, password) => {
+		try {
+			const fd = new FormData();
+		   	fd.append('username', username);
+		   	fd.append('email', email)
+		   	fd.append('password', password)
+		    const response = await axios.post('http://localhost:8000/backend/register',fd,);
+		    if (response.data['error']) {
+		    	return alert(response.data['error']);
+		    }
+		    navigate('/account')
+		} catch (err) {
+			console.log(err);
+		}
+	}
+
 	return (
 		<div className='bg-gray-100 min-h-screen grid grid-rows-[auto_1fr_auto] gap-3 overflow-hidden font-mono'>
 			<div className='row-start-1'>
@@ -13,10 +32,10 @@ function LoginPage() {
 			<div className='p-3 row-start-2 w-screen'>
 				<div className='max-w-full w-100 xl:w-200 xl:text-xl mx-auto grid gap-5'>
 					<form className='w-full grid place-items-center gap-2'>
-						<input type='text' className='bg-white border border-white px-3 rounded-lg shadow-sm hover:border-gray-300 w-full' placeholder='Username'/>
-						<input type='email' className='bg-white border border-white px-3 rounded-lg shadow-sm hover:border-gray-300 w-full' placeholder='Email'/>
-						<input type='password' className='w-full bg-white border border-white px-3 rounded-lg shadow-sm hover:border-gray-300' placeholder='********'/>
-						<button className='bg-black text-center xl:py-1 xl:w-70 w-50 max-w-full rounded-full text-white cursor-pointer'>Create Account</button>
+						<input id='username' type='text' className='bg-white border border-white px-3 rounded-lg shadow-sm hover:border-gray-300 w-full' placeholder='Username'/>
+						<input id='email' type='email' className='bg-white border border-white px-3 rounded-lg shadow-sm hover:border-gray-300 w-full' placeholder='Email'/>
+						<input id='password' type='password' className='w-full bg-white border border-white px-3 rounded-lg shadow-sm hover:border-gray-300' placeholder='********'/>
+						<button className='bg-black text-center xl:py-1 xl:w-70 w-50 max-w-full rounded-full text-white cursor-pointer' onClick={(e) => {handleRegister(document.getElementById('username').value,document.getElementById('email').value,document.getElementById('password').value); e.preventDefault();}}>Create Account</button>
 					</form>
 					<div className='grid gap-5'>
 						<div className='border-t'>
@@ -33,4 +52,4 @@ function LoginPage() {
 	);
 };
 
-export default LoginPage;
+export default RegisterPage;
