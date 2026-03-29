@@ -5,10 +5,6 @@ from django.contrib.auth.models import User
 class Dataset(models.Model):
     set_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    #models.ForeignKey( # https://stackoverflow.com/questions/34305805/foreignkey-user-in-models
-    #    settings.AUTH_USER_MODEL,
-    #    on_delete=models.CASCADE,
-    #) 
     dataset = models.JSONField()
     title = models.CharField(max_length=50)
     description = models.CharField(max_length=255, blank=True, null=True)

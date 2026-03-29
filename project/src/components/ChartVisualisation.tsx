@@ -6,7 +6,7 @@ import { toPng } from 'html-to-image';
 function ChartVisualisation({data,setMode,addSave,setShowFilter,title,metrics}) {
 	const [yAxis, setYAxis] = useState('y-axis');
 	const [xAxis, setXAxis] = useState('x-axis');
-	const charts = {'Bar':Bar, 'Scatter':Scatter, 'Doughnut':Doughnut, 'Area':PolarArea};
+	const charts = {'Bar':Bar, 'Doughnut':Doughnut, 'Area':PolarArea};
 	const [chartType, setChartType] = useState('Bar');
 	const Chart = charts[chartType];
 	const [saving, setSaving] = useState(false);
@@ -70,14 +70,41 @@ function ChartVisualisation({data,setMode,addSave,setShowFilter,title,metrics}) 
 	            </div>
 			</div>
 			<div className='overflow-scroll'>
-				<Chart
-					data={{
-						labels: data.map((d)=>(xAxis == 'Feature ID' ? d['id'] : d['properties'][xAxis])),
-						datasets: [
-							{label:yAxis, data: data.map((d)=>d['properties'][yAxis])},
-						]
-					}} 
-				/>
+				{console.log(data.map((d)=>d['properties']['name']))}
+				{chartType in charts ?
+					<Chart
+						data={{
+							labels: data.map((d)=>(xAxis == 'Feature ID' ? d['id'] : d['properties'][xAxis])),
+							datasets: [
+								{label:yAxis, data: data.map((d)=>d['properties'][yAxis])},
+							]
+						}} 
+					/> :
+					<Scatter 
+						data={{
+							datasets: [{
+								label: yAxis + ' | ' + xAxis,
+								data: data.map((d) => ({
+									x: d.properties[xAxis],
+									y: d.properties[yAxis],
+									label: d.properties.name ? d.properties.name : d.id, 
+								}))
+							}]
+						}}
+						options={{
+							plugins: {
+								tooltip: {
+									callbacks: {
+										label: function(context) {
+											const { x, y, label } = context.raw;
+											return `${label || 'Unknown'} (${x}, ${y})`;
+										}
+									}
+								}
+							}
+						}}
+					/>
+				}
 			</div>
 			<div className='row-start-2 col-start-2 flex justify-center'>
 				<div className='relative border border-gray-300 rounded-lg shadow-md'>

@@ -37,7 +37,7 @@ def addDataset(request):
     title = request.POST.get('title')
     desc = None if request.POST.get('desc') == '' else request.POST.get('desc')
     dataset = request.POST.get('dataset')
-    public = True if request.POST.get('public') == 'Public' else False
+    public = True if request.POST.get('public') == 'true' else False
     preset = int(request.POST.get('preset'))
     try:
         upload = Dataset(dataset=json.loads(dataset), user=request.user, title=title, description=desc, public=public)
@@ -48,7 +48,29 @@ def addDataset(request):
     except Exception as e:
         return JsonResponse({'error': e})
 
-    return JsonResponse({})
+@csrf_exempt
+@require_POST
+def updateDataset(request):
+    id_ = request.POST.get('id')
+    title = request.POST.get('title')
+    desc = None if request.POST.get('desc') == '' else request.POST.get('desc')
+    dataset_ = request.POST.get('dataset')
+    public = True if request.POST.get('public') == 'true' else False
+    preset = int(request.POST.get('preset'))
+
+    dataset = Dataset.objects.get(set_id=id_, user=request.user)
+    dataset.title = title
+    dataset.description = desc
+    dataset.dataset = json.loads(dataset_)
+    dataset.public = public
+    try:
+        #Dataset.objects.filter(set_id=id_,user=request.user).update(title=title, description=desc, dataset=json.loads(dataset), public=public)
+        dataset.save()
+        if preset > -1:
+            PresetGeo.objects.filter(geo_id=preset).update(usage=F('usage')+1)
+        return JsonResponse({'success': id_})
+    except Exception as e:
+        return JsonResponse({'error': e})
 
 @csrf_exempt
 @require_POST

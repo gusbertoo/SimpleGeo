@@ -9,7 +9,9 @@ function Header({name, desc}) {
                   <h1 className='text-xl'>Header</h1>
               </div>
               <nav className='w-2/3 flex justify-end py-1'>
-                  <button href='/tutorials' className='px-3 border-1 mr-1 hover:bg-teal-300'>Tutorials</button>
+                  <Link to='/tutorials' className='flex items-center px-3 border-1 mr-1 hover:bg-teal-300'>
+                      Tutorials
+                  </Link>
                   <Link to='/create' className='flex items-center px-3 border-1 mr-1 hover:bg-teal-300'>
                       Create
                   </Link>

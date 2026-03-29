@@ -18,11 +18,11 @@ function HeaderCell({ h, rename, setShowDeleteColumn, setDelCol }) {
 function TableVisualisation({data, geo, presetGeo, setData, setGeo}) { /* need presetGeo to display feature.id for those planning on mapping imported dataset to preset geosets */
     const ids = presetGeo ? presetGeo.features.map(f => f.id) : [];
     const headers = []; /* variable to hold array of dataset headers */
-    geo['features'].map(
-        (f) => {
-            Object.keys(f['properties']).map(
+    data.map(
+        (d) => {
+            Object.keys(d).map(
                 (h) => {
-                    if (!headers.includes(h)) headers.push(h)
+                    if (!headers.includes(h)) headers.push(h);
                 }
             )
         }

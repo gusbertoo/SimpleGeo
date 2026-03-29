@@ -13,20 +13,21 @@ import FileSideBar from '../components/FileSideBar2';
 import {Resizable} from 'react-resizable';
 import "react-resizable/css/styles.css";
 
-function UpdatePage({geo_,data_,title_,desc_,public_}) {
+function UpdateDataset({dataset, setUpdate, getUserSets}) {
+	console.log(dataset);
 	const [username, setUsername] = useState(null);
 	const nav = useNavigate();
 
-	const [title, setTitle] = useState('');
-	const [desc, setDesc] = useState('');
+	const [title, setTitle] = useState(dataset.title);
+	const [desc, setDesc] = useState(dataset.description);
 	const [file, setFile] = useState(null);
-	const [public_, setPublic] = useState(true);
+	const [public_, setPublic] = useState(dataset.public);
 
 	const [geos, setGeos] = useState(null);
-	const [geo, setGeo] = useState(geo);
+	const [geo, setGeo] = useState(dataset.dataset);
 	const [presetGeo, setPresetGeo] = useState(null);
 	const [presetGeoID, setPresetGeoID] = useState(-1);
-	const [data, setData] = useState(data);
+	const [data, setData] = useState(dataset.dataset['features'].map((f)=>f?.['properties']));
 	const [presetData, setPresetData] = useState(null);
 
 	const [s_width, setS_width] = useState(150);
@@ -35,7 +36,7 @@ function UpdatePage({geo_,data_,title_,desc_,public_}) {
 
 	const [showBind, setShowBind] = useState(false);
 	const [showClear, setShowClear] = useState(false);
-	const [showUpload, setShowUpload] = useState(false);
+	const [showUpdate, setShowUpdate] = useState(false);
 	const [showUploadPreset, setShowUploadPreset] = useState(false);
 	const [showPreview, setShowPreview] = useState(false);
 
@@ -140,52 +141,32 @@ function UpdatePage({geo_,data_,title_,desc_,public_}) {
 		/>
 	);
 
-	const handleUpload = (upload) => {
-		setShowUpload(false);
+	const handleUpdate = (upload) => {
+		setShowUpdate(false);
 		if (title == "") {
 			return alert('The title cannont be empty!')
 		} else if (!upload || !upload['features'] || upload['features'].length == 0) {
-			return alert('The current cannot be uploaded, please try again');
-		} else if (upload['features'][0]['id'] && !presetGeo) {
-			return setShowUploadPreset(true)
+			return alert('The current dataset cannot be update, please try again');
 		}
-		uploadGeo(upload);
+		updateGeo(upload);
 	};
 
-	const uploadGeo = async (upload) => {
+	const updateGeo = async (upload) => {
 		try {
 			const fd = new FormData();
-        	fd.append('username', username);
+			fd.append('id', dataset.set_id);
         	fd.append('title', title);
-        	fd.append('desc', desc);
-        	fd.append('public', public_)
+        	fd.append('desc', desc == null ? '':desc);
+        	fd.append('public', public_);
         	fd.append('dataset', JSON.stringify(upload));
         	fd.append('preset', presetGeoID);
-        	const response = await axios.post('http://localhost:8000/backend/upload-geo',fd,);
-        	nav(`/view/${response.data['success']}`);
+        	const response = await axios.post('http://localhost:8000/backend/update-geo',fd,);
+        	setUpdate(null);
+        	getUserSets();
+        	alert('Update Successful');
 		} catch (err) {
 			alert(err)
 		}
-	};
-
-	const uploadPreset = async (upload) => {
-		const preset = {...upload,
-            features: upload['features'].map(
-                (f) => ({
-                    ...f,
-                    properties: {}
-                })
-            )
-        };
-        try {
-        	const fd = new FormData();
-        	fd.append('username', username);
-        	fd.append('name', title);
-        	fd.append('geodata', JSON.stringify(preset));
-        	const response = await axios.post('http://localhost:8000/backend/upload-preset',fd,);
-        } catch (err) {
-        	console.log(err);
-        }
 	};
 
 	useEffect(() => {
@@ -251,15 +232,15 @@ function UpdatePage({geo_,data_,title_,desc_,public_}) {
     		...f,
     		properties: {
     			...f.properties,
-    			...data[i]
+    			...presetData[i]
     		}
     	}))}));
     }, [presetData])
 
 	return (
-		<div className='bg-gray-100 min-h-screen grid grid-rows-[auto_1fr_auto] gap-3 overflow-hidden font-mono'>
+		<div className='bg-gray-100 gap-3 overflow-hidden font-mono rounded-xl'>
 			<div>
-				<div className='p-3 row-start-2 grid grid-cols-[3fr_1fr] max-w-screen 2xl:w-800 w-300 mx-auto gap-3'>
+				<div className='p-3 row-start-2 grid grid-cols-[3fr_1fr] mx-auto gap-3'>
 					<div className='col-start-1 col-span-2 md:col-span-1 2xl:h-200 xl:h-150 md:h-120 sm:h-80 h-50 rounded-md overflow-hidden'>
 						<div ref={containerRef} id='map_table_container' className={`h-full w-full grid overflow-hidden`} style={{gridTemplateColumns: `${data.length > 0 || presetData ? s_width: 0}px 1fr`,}}>
 							<div className={`h-full col-start-2`}>
@@ -280,7 +261,7 @@ function UpdatePage({geo_,data_,title_,desc_,public_}) {
 					<div className={`col-start-1 font-mono col-span-2 lg:col-span-1 md:col-start-2 grid grid-rows-[1fr_auto_auto]`}>
 						<div className='w-full h-full bg-white rounded-md p-3 row-start-1 grid grid-rows-[auto_1fr]'>
 							<input type='text' placeholder='Title...' spellCheck='false' value={title} onChange={(e)=>{setTitle(e.target.value)}} className={`w-full text-1xl rounded-md border border-gray-300 px-1 ${title != "" ? 'underline font-bold' : ''}`}/>
-							<textarea placeholder='description...' className='px-2 min-h-30 w-full border border-gray-300 mt-1 resize-none rounded-md' onChange={(d) => setDesc(d.target.value)}/>
+							<textarea value={desc} placeholder='description...' className='px-2 min-h-30 w-full border border-gray-300 mt-1 resize-none rounded-md' onChange={(d) => setDesc(d.target.value)}/>
 						</div>
 
 						<div className='row-start-2 grid grid-cols-2 gap-2 p-3'>
@@ -297,9 +278,9 @@ function UpdatePage({geo_,data_,title_,desc_,public_}) {
 							</button>
 							<div onClick={()=>!username && alert('Must be logged into a registered account to upload')} className='col-span-2'>
 								<div className={`grid grid-cols-[1fr_auto] w-1/2 mx-auto ${!username && `cursor-not-allowed`}`}>
-				                	<button className={`bg-blue-100 border border-gray-300 shadow-lg rounded-l-md text-gray-500 ${username ? `cursor-pointer hover:bg-blue-300 hover:text-black`: `cursor-not-allowed`}`} onClick={()=>setShowUpload(true)}>Update</button>
+				                	<button className={`bg-blue-100 border border-gray-300 shadow-lg rounded-l-md text-gray-500 ${username ? `cursor-pointer hover:bg-blue-300 hover:text-black`: `cursor-not-allowed`}`} onClick={()=>setShowUpdate(true)}>Update</button>
 				                	<div className='bg-blue-50 hover:bg-blue-100 border-r border-y border-gray-300 rounded-r-md relative'>
-				                		<select onChange={(e)=>{e.target.value == 'Public' ? setPublic(true):setPublic(false)}} id='upload_type' className={`appearance-none outline-none pl-0.5 w-5 bg-blue-100 ${!username && `pointer-events-none`} text-blue-100 ${username && `hover:bg-blue-300 hover:text-blue-300 cursor-pointer`} rounded-r-sm`}>
+				                		<select value={public_ ? 'Public':'Private'} onChange={(e)=>{e.target.value == 'Public' ? setPublic(true):setPublic(false)}} id='upload_type' className={`appearance-none outline-none pl-0.5 w-5 bg-blue-100 ${!username && `pointer-events-none`} text-blue-100 ${username && `hover:bg-blue-300 hover:text-blue-300 cursor-pointer`} rounded-r-sm`}>
 				                			<option>Public</option>
 				                			<option>Private</option>
 				                		</select>
@@ -312,7 +293,6 @@ function UpdatePage({geo_,data_,title_,desc_,public_}) {
 						</div>
 					</div>
 				</div>
-			</div>
 			</div>
 
 			{showBind &&
@@ -370,10 +350,10 @@ function UpdatePage({geo_,data_,title_,desc_,public_}) {
                 </div>
             }
 
-            {showUpload &&
+            {showUpdate &&
             	<div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
                     <div className="bg-white p-5 rounded-md shadow-lg w-80">
-                        <h2 className="font-bold mb-3">Are you sure you want to upload current dataset?</h2>
+                        <h2 className="font-bold mb-3">Are you sure you want to update current dataset?</h2>
                         <h2 className='flex mb-3 text-sm text-gray-600'>Visibilty:
                         	<div className='bg-white border border-gray-300 rounded relative ml-1'>
 		                		<select onChange={(e)=>{e.target.value == 'Public' ? setPublic(true):setPublic(false)}} value={public_ ? 'Public' : 'Private'} className='appearance-none outline-none pl-0.5 pr-6'>
@@ -383,28 +363,12 @@ function UpdatePage({geo_,data_,title_,desc_,public_}) {
 		                		<div className='text-gray-600 pointer-events-none top-0 absolute  right-0 border-l bg-white px-1 border-gray-300'>
 		                			&#8597;
 		                		</div>
-	                	</div>
-                	</h2>
+	                		</div>
+                		</h2>
 
                         <div className="flex justify-center gap-2">
-                            <button onClick={() => setShowUpload(false)} className="px-3 py-1 bg-gray-200 rounded cursor-pointer">No</button>
-                            <button className="px-3 py-1 bg-blue-500 text-white rounded cursor-pointer" onClick={()=>{handleUpload( presetGeo ? presetGeo: geo )}}>Yes</button>
-                        </div>
-                    </div>
-                </div>
-            }
-
-            {showUploadPreset &&
-            	<div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-                    <div className="bg-white p-5 rounded-md shadow-lg w-80">
-                        <h2 className="font-bold mb-3">Your dataset meets the requirements to be used as preset. Would you like to upload a preset for others to use? This can be deleted at any time in the Account section.</h2>
-
-                        <div className="flex justify-center gap-2">
-                            <button onClick={() => {setShowUploadPreset(false); uploadGeo(presetGeo ? presetGeo: geo)}} className="px-3 py-1 bg-gray-200 rounded cursor-pointer">No</button>
-                            <button className="px-3 py-1 bg-blue-500 text-white rounded cursor-pointer" onClick={()=>{setShowUploadPreset(false); uploadPreset(presetGeo ? presetGeo: geo); uploadGeo(presetGeo ? presetGeo: geo);}}>Yes</button>
-                        </div>
-                        <div className='flex justify-center mt-2'>
-                        	<button className='px-3 py-1 bg-gray-200 rounded cursor-pointer' onClick={()=>setShowUploadPreset(false)}>Cancel</button>
+                            <button onClick={() => setShowUpdate(false)} className="px-3 py-1 bg-gray-200 rounded cursor-pointer">No</button>
+                            <button className="px-3 py-1 bg-blue-500 text-white rounded cursor-pointer" onClick={()=>{handleUpdate( presetGeo ? presetGeo: geo )}}>Yes</button>
                         </div>
                     </div>
                 </div>
@@ -412,7 +376,7 @@ function UpdatePage({geo_,data_,title_,desc_,public_}) {
 
             {showPreview &&
 	            <div className='fixed inset-0 bg-black/40 z-50 grid items-center'>
-	            	<div className='relative mx-auto w-8/10'>
+	            	<div className='relative mx-auto w-8/10 overflow-hidden'>
 	            		<button onClick={()=>setShowPreview(false)} className='cursor-pointer bg-white border border-gray-300 shadow-lg rounded-full px-3 py-1 text-lg flex items-center mb-2 hover:bg-red-400 hover:border-gray-700'>x</button>
 	            		<Preview geo_={presetGeo ? presetGeo : geo} title={title} description={desc} />
 	            	</div>
@@ -423,4 +387,4 @@ function UpdatePage({geo_,data_,title_,desc_,public_}) {
 	)
 };
 
-export default CreatePage;
+export default UpdateDataset;

@@ -21,7 +21,6 @@ function PreviewDataset({geo_,title,description}) {
         });
         return arr;
     });
-    console.log(metrics);
 
     useEffect(()=>{
         if (!geo) return;

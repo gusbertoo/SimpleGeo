@@ -1,9 +1,10 @@
 import {Link} from 'react-router-dom';
 import dayjs from "dayjs";
 import { useState } from 'react'
+import { FaLock, FaLockOpen } from 'react-icons/fa'
 import axios from 'axios'; axios.defaults.withCredentials = true;
 
-function Dataset({dataset, username, getUserSets}) {
+function Dataset({dataset, username, getUserSets, setUpdate}) {
     const upload = dayjs(dataset.upload).format("DD/MM/YYYY");
     const update = dayjs(dataset.update).format("DD/MM/YYYY");
     const [showDeleteDataset, setShowDeleteDataset] = useState(false);
@@ -22,7 +23,8 @@ function Dataset({dataset, username, getUserSets}) {
     
   return (
       <div className='p-3'>
-          <div className='h-full bg-white p-5 rounded-lg shadow-md m-auto font-mono border border-gray-200 hover:border-gray-500 grid gap-3 grid-rows-[auto_1fr_auto]'>
+          <div className='relative h-full bg-white p-5 rounded-lg shadow-md m-auto font-mono border border-gray-200 hover:border-gray-500 grid gap-3 grid-rows-[auto_1fr_auto]'>
+            {dataset.public ? <FaLockOpen title='Public' className='text-gray-500 absolute top-3 right-3' /> : <FaLock title='Private' className='text-gray-500 absolute top-3 right-3' />}
               <div className=''>
                   <h1 className='text-lg font-bold'>{dataset.title}</h1>
                   <h2 className='ml-auto'>Provided by: <strong>{username}</strong></h2>
@@ -40,9 +42,9 @@ function Dataset({dataset, username, getUserSets}) {
             </div>
 
               <div className='grid grid-cols-2 gap-3 text-sm'>
-                  <Link className='border rounded-lg border-gray-300 hover:border-gray-500 shadow-md p-1 text-center col-span-2 lg:col-span-1' to={`/view/${dataset.set_id}`}>
+                  <button onClick={()=>setUpdate(dataset)} className='border rounded-lg border-gray-300 hover:border-gray-500 shadow-md p-1 text-center col-span-2 lg:col-span-1'>
                       Update
-                  </Link>
+                  </button>
                   <button className='border rounded-lg bg-red-200 border-red-400 hover:bg-red-400 shadow-md p-1 text-center cursor-pointer col-span-2 lg:col-span-1' onClick={()=>setShowDeleteDataset(true)}>
                     Delete
                   </button>

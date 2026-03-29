@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Navigate } from 'react-router-dom';
 import Header from '../components/Header.tsx';
 import Dataset from '../components/Dataset_account.tsx';
+import Update from '../components/UpdateDataset.tsx';
 import axios from 'axios'; axios.defaults.withCredentials = true;
 import { Chart as ChartJS, defaults } from 'chart.js/auto';
 import { Bar } from 'react-chartjs-2'
@@ -21,6 +22,8 @@ function AccountPage() {
 	const [labels, setLabels] = useState([]);
 	const [showLabelList, setShowLabelList] = useState(true);
 	const [presetData, setPresetData] = useState([]);
+	const [update, setUpdate] = useState(null);
+	const [showCancelUpdate, setShowCancelUpdate] = useState(false);
 
 	useEffect(() => {
 		(async () => {
@@ -101,7 +104,7 @@ function AccountPage() {
 											<>
 												{datasets.map(
 													(d) => (
-														<Dataset key={d.set_id} dataset={d} username={username} getUserSets={getUserSets} />
+														<Dataset key={d.set_id} dataset={d} username={username} getUserSets={getUserSets} setUpdate={setUpdate} />
 													)
 												)}
 											</> :
@@ -169,7 +172,7 @@ function AccountPage() {
 						</div>
 					</div>
 				</div>
-				<div className='h-32 bg-teal-700 row-start-3'/>
+				<div className='h-32 bg-linear-to-r from-teal-800 to-teal-200 border-t row-start-3'/>
 
 				{showLogout &&
 	            	<div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
@@ -207,6 +210,26 @@ function AccountPage() {
 	                    </div>
 	                </div>
 	            }
+	            {update &&
+	            	<div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+	            		<div className='w-9/10 overflow-hidden'>
+	            			<button onClick={()=>setShowCancelUpdate(true)} className='cursor-pointer bg-white border border-gray-300 shadow-lg rounded-full px-3 py-1 text-lg flex items-center mb-2 hover:bg-red-400 hover:border-gray-700'>x</button>
+	                    	<Update dataset={update} setUpdate={setUpdate} getUserSets={getUserSets} />
+	                    </div>
+	                </div>
+	            }
+	            {showCancelUpdate &&
+	            	<div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+	                    <div className="bg-white p-5 rounded-md shadow-lg w-80">
+	                        <h2 className="font-bold mb-3">Are you sure you want to close this window? Any changes made will not be saved</h2>
+
+	                        <div className="flex justify-center gap-2">
+	                            <button onClick={() => setShowCancelUpdate(false)} className="px-3 py-1 bg-gray-200 rounded cursor-pointer">No</button>
+	                            <button onClick={() => {setUpdate(null); setShowCancelUpdate(false)}} className="px-3 py-1 bg-blue-500 text-white rounded cursor-pointer">Yes</button>
+	                        </div>
+	                    </div>
+	                </div>
+	        	}
 			</div>
 		)
 	} else {

@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaLock, FaLockOpen } from 'react-icons/fa'
-import { IoIosCloseCircleOutline } from "react-icons/io";
 import axios from 'axios'; axios.defaults.withCredentials = true;
 import Header from '../components/Header';
 import TableVisualisation from '../components/TableVisualisation';
@@ -144,7 +143,7 @@ function CreatePage() {
 		if (title == "") {
 			return alert('The title cannont be empty!')
 		} else if (!upload || !upload['features'] || upload['features'].length == 0) {
-			return alert('The current cannot be uploaded, please try again');
+			return alert('The current dataset cannot be uploaded, please try again');
 		} else if (upload['features'][0]['id'] && !presetGeo) {
 			return setShowUploadPreset(true)
 		}
@@ -250,7 +249,7 @@ function CreatePage() {
     		...f,
     		properties: {
     			...f.properties,
-    			...data[i]
+    			...presetData[i]
     		}
     	}))}));
     }, [presetData])
@@ -261,7 +260,7 @@ function CreatePage() {
 				<Header name='Create' desc='Design your very own datasets and visualisations' />
 			</div>
 			<div>
-				<div className='p-3 row-start-2 grid grid-cols-[3fr_1fr] max-w-screen 2xl:w-800 w-300 mx-auto gap-3'>
+				<div className='p-3 row-start-2 grid grid-cols-[3fr_1fr] max-w-screen 2xl:w-500 xl:w-300 w-250 mx-auto gap-3'>
 					<div className='col-start-1 col-span-2 md:col-span-1 2xl:h-200 xl:h-150 md:h-120 sm:h-80 h-50 rounded-md overflow-hidden'>
 						<div ref={containerRef} id='map_table_container' className={`h-full w-full grid overflow-hidden`} style={{gridTemplateColumns: `${data.length > 0 || presetData ? s_width: 0}px 1fr`,}}>
 							<div className={`h-full col-start-2`}>
@@ -292,14 +291,14 @@ function CreatePage() {
 							<button 
 								onClick={()=>{
 									if (!presetGeo && !geo) return alert('Nothing to preview!');
-									setShowPreview((prev)=>!prev)
+									setShowPreview(true);
 								}} 
 								className='bg-white rounded-md shadow-lg border border-gray-300 cursor-pointer hover:border-gray-500 hover:text-black text-gray-500'>
 								Preview
 							</button>
 							<div onClick={()=>!username && alert('Must be logged into a registered account to upload')} className='col-span-2'>
 								<div className={`grid grid-cols-[1fr_auto] w-1/2 mx-auto ${!username && `cursor-not-allowed`}`}>
-				                	<button className={`bg-blue-100 border border-gray-300 shadow-lg rounded-l-md text-gray-500 ${username ? `cursor-pointer hover:bg-blue-300 hover:text-black`: `cursor-not-allowed`}`} onClick={()=>setShowUpload(true)}>Upload</button>
+				                	<button className={`bg-blue-100 border border-gray-300 shadow-lg rounded-l-md text-gray-500 ${username ? `cursor-pointer hover:bg-blue-300 hover:text-black`: `cursor-not-allowed pointer-events-none`}`} onClick={()=>setShowUpload(true)}>Upload</button>
 				                	<div className='bg-blue-50 hover:bg-blue-100 border-r border-y border-gray-300 rounded-r-md relative'>
 				                		<select onChange={(e)=>{e.target.value == 'Public' ? setPublic(true):setPublic(false)}} id='upload_type' className={`appearance-none outline-none pl-0.5 w-5 bg-blue-100 ${!username && `pointer-events-none`} text-blue-100 ${username && `hover:bg-blue-300 hover:text-blue-300 cursor-pointer`} rounded-r-sm`}>
 				                			<option>Public</option>
@@ -316,8 +315,7 @@ function CreatePage() {
 				</div>
 			</div>
 
-			<div className='h-32 bg-teal-700 row-start-3'>
-			</div>
+			<div className='h-32 bg-linear-to-r from-teal-800 to-teal-200 border-t row-start-3'/>
 
 			{showBind &&
 				<div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
@@ -416,7 +414,7 @@ function CreatePage() {
 
             {showPreview &&
 	            <div className='fixed inset-0 bg-black/40 z-50 grid items-center'>
-	            	<div className='relative mx-auto w-8/10'>
+	            	<div className='w-8/10 mx-auto overflow-hidden'>
 	            		<button onClick={()=>setShowPreview(false)} className='cursor-pointer bg-white border border-gray-300 shadow-lg rounded-full px-3 py-1 text-lg flex items-center mb-2 hover:bg-red-400 hover:border-gray-700'>x</button>
 	            		<Preview geo_={presetGeo ? presetGeo : geo} title={title} description={desc} />
 	            	</div>

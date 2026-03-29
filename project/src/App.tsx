@@ -6,6 +6,7 @@ import CreatePage from './pages/CreatePage2';
 import AccountPage from './pages/AccountPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import TutorialsPage from './pages/TutorialsPage'
 
 const router2 = createBrowserRouter (
     createRoutesFromElements(
@@ -27,6 +28,7 @@ const router = createBrowserRouter(
             <Route path='/account' element={ <AccountPage /> } />
             <Route path='/login' element={ <LoginPage /> } />
             <Route path='/register' element={ <RegisterPage /> } />
+            <Route path='/tutorials' element={<TutorialsPage />}/>
         </>
     )
 );

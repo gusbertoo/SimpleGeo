@@ -21,4 +21,5 @@ urlpatterns = [
     path("update-views", views.updateViews, name="updateViews"),
     path("update-saves", views.updateSaves, name="updateSaves"),
     path("delete-preset", views.deletePreset, name="deletePreset"),
+    path("update-geo", views.updateDataset, name="updateDataset"),
 ]

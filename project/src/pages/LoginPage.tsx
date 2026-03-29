@@ -44,7 +44,7 @@ function LoginPage() {
 					</div>
 				</div>
 			</div>
-			<div className='h-32 bg-teal-700 row-start-3'/>
+			<div className='h-32 bg-linear-to-r from-teal-800 to-teal-200 border-t row-start-3'/>
 		</div>
 	);
 };
