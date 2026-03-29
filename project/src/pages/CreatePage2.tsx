@@ -296,7 +296,7 @@ function CreatePage() {
 								className='bg-white rounded-md shadow-lg border border-gray-300 cursor-pointer hover:border-gray-500 hover:text-black text-gray-500'>
 								Preview
 							</button>
-							<div onClick={()=>!username && alert('Must be logged into a registered account to upload')} className='col-span-2'>
+							<div onClick={()=>!username && alert('Must be logged into a registered account to upload')} className={`${!username && `opacity-70`} col-span-2`}>
 								<div className={`grid grid-cols-[1fr_auto] w-1/2 mx-auto ${!username && `cursor-not-allowed`}`}>
 				                	<button className={`bg-blue-100 border border-gray-300 shadow-lg rounded-l-md text-gray-500 ${username ? `cursor-pointer hover:bg-blue-300 hover:text-black`: `cursor-not-allowed pointer-events-none`}`} onClick={()=>setShowUpload(true)}>Upload</button>
 				                	<div className='bg-blue-50 hover:bg-blue-100 border-r border-y border-gray-300 rounded-r-md relative'>

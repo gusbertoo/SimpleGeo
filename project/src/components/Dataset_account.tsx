@@ -20,11 +20,29 @@ function Dataset({dataset, username, getUserSets, setUpdate}) {
         alert(err);
       }
     }
+
+    const updatePublic = async (public_) => {
+      try {
+        const fd = new FormData();
+        fd.append('id', dataset['set_id']);
+        fd.append('public', public_)
+        const response = await axios.post('http://localhost:8000/backend/update-public-status',fd);
+        getUserSets();
+      } catch (err) {
+        alert(err);
+      }
+    }
     
   return (
       <div className='p-3'>
           <div className='relative h-full bg-white p-5 rounded-lg shadow-md m-auto font-mono border border-gray-200 hover:border-gray-500 grid gap-3 grid-rows-[auto_1fr_auto]'>
-            {dataset.public ? <FaLockOpen title='Public' className='text-gray-500 absolute top-3 right-3' /> : <FaLock title='Private' className='text-gray-500 absolute top-3 right-3' />}
+            <div className='absolute top-3 right-3'>
+              <select onChange={(e)=>updatePublic(e.target.value)} value={dataset.public ? 'Public':'Private'} className='w-5 appearance-none outline-none cursor-pointer text-white border border-gray-300 hover:border-gray-500 rounded-md shadow-lg'>
+                <option>Public</option>
+                <option>Private</option>
+              </select>
+              <div className='absolute top-0 w-5 h-full pointer-events-none grid place-items-center'>{dataset.public ? <FaLockOpen title='Public' className='w-4 h-3 text-gray-500'/> : <FaLock title='Private' className='w-4 h-3 text-gray-500'/>}</div>
+            </div>
               <div className=''>
                   <h1 className='text-lg font-bold'>{dataset.title}</h1>
                   <h2 className='ml-auto'>Provided by: <strong>{username}</strong></h2>
@@ -42,7 +60,7 @@ function Dataset({dataset, username, getUserSets, setUpdate}) {
             </div>
 
               <div className='grid grid-cols-2 gap-3 text-sm'>
-                  <button onClick={()=>setUpdate(dataset)} className='border rounded-lg border-gray-300 hover:border-gray-500 shadow-md p-1 text-center col-span-2 lg:col-span-1'>
+                  <button onClick={()=>setUpdate(dataset)} className='border rounded-lg border-gray-300 hover:border-gray-500 shadow-md p-1 text-center col-span-2 lg:col-span-1 cursor-pointer'>
                       Update
                   </button>
                   <button className='border rounded-lg bg-red-200 border-red-400 hover:bg-red-400 shadow-md p-1 text-center cursor-pointer col-span-2 lg:col-span-1' onClick={()=>setShowDeleteDataset(true)}>

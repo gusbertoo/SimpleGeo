@@ -74,6 +74,17 @@ def updateDataset(request):
 
 @csrf_exempt
 @require_POST
+def updatePublic(request):
+    id_ = request.POST.get('id')
+    public = True if request.POST.get('public') == 'Public' else False
+    try:
+        Dataset.objects.filter(set_id=id_,user=request.user).update(public=public)
+        return JsonResponse({'success':id_})
+    except Exception as e:
+        return JsonResponse({'error':e})
+
+@csrf_exempt
+@require_POST
 def updateViews(request):
     id_ = request.POST.get('id')
     Dataset.objects.filter(set_id=id_).update(views=F('views')+1)
