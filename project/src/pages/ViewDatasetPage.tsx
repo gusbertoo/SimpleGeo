@@ -115,7 +115,7 @@ function ViewDatasetPage() {
         <div className='w-screen px-5'>
             {geo && authorised ? 
                 <div className='max-w-full w-350 mx-auto gap-2 grid grid-cols-[1fr_250px]'>
-                    <div className='bg-white rounded-xl shadow-md overflow-hidden relative 2xl:h-200 xl:h-150 md:h-120 h-80 sm:col-span-1 col-span-2'>
+                    <div className='bg-white rounded-xl shadow-md overflow-hidden relative 2xl:h-200 xl:h-150 md:h-100 sm:h-60 h-40 sm:col-span-1 col-span-2'>
                         {mode == 'table' &&
                             <div className='p-1 h-full'>
                                 <Table metrics={metrics} data={filtered['features']} setMode={setMode} addSave={addSave} setShowFilter={setShowFilter} />
@@ -147,7 +147,7 @@ function ViewDatasetPage() {
             }
         </div>
         <div className='h-32 bg-teal-700 row-start-3'/>
-        {showFilter && <Filter filters={filters} setFilters={setFilters} setShowFilter={setShowFilter} metrics={Object.keys(geo.features[0]?.properties)} />}
+        {showFilter && <Filter filters={filters} setFilters={setFilters} setShowFilter={setShowFilter} metrics={metrics} />}
     </div>
 
   );

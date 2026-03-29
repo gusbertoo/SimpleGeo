@@ -36,16 +36,21 @@ function BrowseMapVisual({geo,setMode,addSave,title,setShowFilter,metrics}) {
       }, [ref])
 
     const [metric, setMetric] = useState('');
-    const metricVals = geo.features?.map(
-        f => f.properties?.[metric]
-    ) || [];
+
+    const metricVals = geo.features?.map((f) => {
+        const val = f.properties?.[metric];
+        if (val === "" || val == null) return undefined;
+        const num = Number(val);
+        return isNaN(num) ? undefined : num;
+    }).filter(v => v !== undefined) || [];
+
     const min = Math.min(...metricVals);
     const max = Math.max(...metricVals);
     const [clicked2, setClicked2] = useState(new Map()) // variable to store all current features that have been clicked
     const [geoReset, setGeoReset] = useState(0);
 
     const norm = (v) => {
-        if (typeof(v) == 'number') return (v - min) / (max - min);
+        if (v != '' && !isNaN(Number(v))) return (Number(v) - min) / (max - min);
         return NaN;
     }
 
