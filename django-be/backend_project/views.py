@@ -8,7 +8,6 @@ from django.http import HttpResponse, JsonResponse
 from .models import Dataset, PresetGeo
 from django.db.models import F
 
-import geopandas as gpd
 import pandas as pd
 from io import BytesIO
 import json
@@ -27,7 +26,7 @@ def getGeodatas(request):
     return JsonResponse(data, safe=False)
 
 def getDataset(request, id):
-    data = list(Dataset.objects.filter(set_id=id).values())
+    data = list(Dataset.objects.filter(set_id=id).values('set_id','dataset','title','description','upload','update','update','public','user__username'))
     return JsonResponse(data, safe=False)
 
 @csrf_exempt
@@ -121,11 +120,11 @@ def getFile(request):
     content_type  = request.FILES.get('file').content_type
     
     if content_type in accepted:
-        if content_type == 'application/json' or content_type == 'application/geo+json':
-            df = pd.read_json(BytesIO(file_))
-            if 'type' in df.iloc[0] and df.iloc[0]['type'] == 'FeatureCollection':
-                props = df['features'].map(lambda x: x['properties'])
-                return JsonResponse({'data': props.to_list(), 'geo': json.loads(file_)}, safe=False)
+        if content_type in ['application/json', 'application/geo+json']:
+            data = json.load(BytesIO(file_))
+            if 'type' in data and data['type'] == 'FeatureCollection':
+                props = [feature['properties'] for feature in data.get('features', [])]
+                return JsonResponse({'data': props, 'geo': data}, safe=False)
 
         elif content_type == 'text/csv':
             df = pd.read_csv(BytesIO(file_))

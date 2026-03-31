@@ -10,7 +10,7 @@ function Dataset({dataset}) {
       try {
         const fd = new FormData();
         fd.append('id',dataset.set_id);
-        const response = await axios.post('http://localhost:8000/backend/update-views',fd,);
+        const response = await axios.post('http://localhost:8000/backend//update-views',fd,);
       } catch (err) {
         alert(err);
       }
@@ -25,7 +25,7 @@ function Dataset({dataset}) {
               </div>
           
             <div className='grid gap-1'>
-              <div className='p-1 border border-gray-300 rounded-lg text-sm'>
+              <div className='p-1 border border-gray-300 rounded-lg break-words overflow-auto max-h-40'>
                   {dataset.description ? <p>{dataset.description}</p> : <p>No description</p>}
               </div>
               

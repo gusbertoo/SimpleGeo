@@ -8,6 +8,7 @@ export default defineConfig({
       react(),
       tailwindcss()
 ],
+base:"/~cxb22121/simplegeo/",
 server: {
     proxy: {
       "/api": {

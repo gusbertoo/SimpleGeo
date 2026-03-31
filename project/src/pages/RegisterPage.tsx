@@ -8,6 +8,12 @@ function RegisterPage() {
 
 	const navigate = useNavigate();
 	const handleRegister = async (username, email, password) => {
+		if (username == '' || email == '' || password == '') {
+			if (username == '') alert('The username field is required');
+			if (email == '') alert('The email field is required');
+			if (password == '') alert('The password field is required');
+			return;
+		}
 		try {
 			const fd = new FormData();
 		   	fd.append('username', username);
@@ -19,7 +25,7 @@ function RegisterPage() {
 		    }
 		    navigate('/account')
 		} catch (err) {
-			console.log(err);
+			alert(err);
 		}
 	}
 

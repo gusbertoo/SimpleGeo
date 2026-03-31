@@ -14,7 +14,6 @@ import {Resizable} from 'react-resizable';
 import "react-resizable/css/styles.css";
 
 function UpdateDataset({dataset, setUpdate, getUserSets}) {
-	console.log(dataset);
 	const [username, setUsername] = useState(null);
 	const nav = useNavigate();
 
@@ -53,6 +52,7 @@ function UpdateDataset({dataset, setUpdate, getUserSets}) {
 		setData({});
 		setPresetData(null);
 		setShowClear(false);
+		window.dispatchEvent(new Event("resize"));
     }
 
     const getPresetGeo = (id) => {
@@ -172,6 +172,11 @@ function UpdateDataset({dataset, setUpdate, getUserSets}) {
 	useEffect(() => {
 		if (!file) return;
 		(async () => {
+			if (file) {
+	            const ext = file['name'].split('.').pop().toLowerCase(); /* get file extension to check, toLower() ensures all the same case- i.e. json and JSON treated the same */
+	            const acceptable = ['json', 'csv','geojson','geo+json']
+	            if (!acceptable.includes(ext)) return alert(ext + ' is not supported. Supported file types: JSON, CSV, GeoJSON');
+	        }
 			try {
 		        const fd = new FormData();
 		        fd.append('file', file);
@@ -179,7 +184,7 @@ function UpdateDataset({dataset, setUpdate, getUserSets}) {
 		        setGeo(response.data.geo);
 		        setData(response.data.data);
 		    } catch (err) {
-		    	console.log(err);
+		    	alert(err);
 		    }
     	})();
 	}, [file]);

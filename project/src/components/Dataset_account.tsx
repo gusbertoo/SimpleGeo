@@ -49,7 +49,7 @@ function Dataset({dataset, username, getUserSets, setUpdate}) {
               </div>
           
             <div className='grid grid-rows-[1fr_auto] gap-1'>
-              <div className='p-1 border border-gray-300 rounded-lg text-sm'>
+              <div className='p-1 border border-gray-300 rounded-lg break-words overflow-auto max-h-40'>
                   {dataset.description ? <p>{dataset.description}</p> : <p>No description</p>}
               </div>
               

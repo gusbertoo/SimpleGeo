@@ -1,6 +1,7 @@
 import { useParams } from "react-router";
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
+import dayjs from "dayjs";
 
 import Chart from '../components/ChartVisualisation';
 import Map from '../components/BrowseMapVisual';
@@ -42,6 +43,9 @@ function ViewDatasetPage() {
     const [mode, setMode] = useState('map');
     const [filters, setFilters] = useState({});
     const [showFilter, setShowFilter] = useState(false);
+    const [username, setUsername] = useState('');
+    const [upload_, setUpload] = useState('');
+    const [update_, setUpdate] = useState('');
 
     useEffect(()=>{
         if (!geo) return;
@@ -84,7 +88,7 @@ function ViewDatasetPage() {
     }
     
     useEffect(() => {
-        fetch(`http://127.0.0.1:8000/backend/get-dataset/${curr_set_id}`)
+        fetch(`http://localhost:8000/backend/${curr_set_id}`)
             .then(r => r.json())
             .then(d => {
                 if (d[0]['public'] == false) authCheck(d[0]['set_id']);
@@ -93,6 +97,9 @@ function ViewDatasetPage() {
                 setGeo(d[0]['dataset']);
                 setFiltered(d[0]['dataset']);
                 setData([...d[0]['dataset']['features'].map((f)=>({...f['properties']}))]);
+                setUpload(dayjs(d[0].upload).format("DD/MM/YYYY"));
+                setUpdate(dayjs(d[0].update).format("DD/MM/YYYY"));
+                setUsername(d[0]['user__username']);
                 const arr = [];
                 d[0]['dataset']['features'].map(
                     (f) => {
@@ -132,13 +139,17 @@ function ViewDatasetPage() {
                             </div>
                         }
                     </div>
-                    <div className='p-3 grid gap-1 grid-rows-[auto_auto_1fr] bg-white rounded-xl shadow-md'>
+                    <div className='p-3 grid gap-1 grid-rows-[auto_auto_1fr_auto] bg-white rounded-xl shadow-md'>
                         <div className='border rounded-md border-gray-300 px-1'>
                             <h1 className='text-center'>{datasetRef.title}</h1>
                         </div>
-                        <p className='text-xs text-gray-300'>description</p>
-                        <div className='border border-gray-300 rounded-md px-1 text-sm text-gray-500'>
+                        <h2 className='text-xs text-gray-400'>Provided by: <strong>{username}</strong></h2>
+                        <div className='border border-gray-300 rounded-md px-1 text-sm text-gray-500 break-words overflow-auto'>
                             {!datasetRef.description ? <p>No description avaliable</p> : <p>{datasetRef.description}</p>}
+                        </div>
+                        <div className='border border-gray-300 px-1 text-xs rounded-md mt-1'>
+                            <p className='text-gray-500'>Upload: {upload_}</p>
+                            <p className='text-gray-500'>Update: {update_}</p>
                         </div>
                     </div>
                 </div>

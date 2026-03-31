@@ -49,7 +49,6 @@ function CreatePage() {
 
     const geoIndicatorChange = (g) => {
         setGeoIndicator(g.target.value);
-        console.log(g.target.value);
     }
     
     
@@ -65,11 +64,10 @@ function CreatePage() {
                     const fd = new FormData();
                     fd.append('file', file);
                     const response = await axios.post('http://localhost:8000/backend/get-file',fd,);
-                    console.log(response)
                     setData(response.data.data);
                     setGeo(response.data.geo);
                 } catch (err) {
-                    console.log(err);
+                    alert(err);
                 }
             }
             getFile();
@@ -112,7 +110,7 @@ function CreatePage() {
         try {
             const response = await axios.post('http://localhost:8000/backend/add-dataset',fd,);
         } catch (err) {
-            console.log(err);
+            alert(err);
         }
     }
     
@@ -147,7 +145,7 @@ function CreatePage() {
                       <></>
                   }
                   {geoID > -1 ?
-                      <select onChange={(g)=>{console.log(g.target.value)}}>
+                      <select onChange={(g)=>{alert(g.target.value)}}>
                           {Object.keys(data[0]).map(
                                 (k, i) => (
                                     <option key={i}>{k}</option>

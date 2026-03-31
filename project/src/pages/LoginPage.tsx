@@ -8,6 +8,11 @@ function LoginPage() {
 	const navigate = useNavigate();
 	const handleLogin = async (e,user, password) => {
 		e.preventDefault();
+		if (user == '' || password == '') {
+			if (user == '') alert('The username / email field is required');
+			if (password == '') alert('The password field is required');
+			return;
+		}
 		try {
 			const fd = new FormData();
 		   	fd.append('user', user);
@@ -18,7 +23,7 @@ function LoginPage() {
 		    }
 		    alert(response.data['error']);
 		} catch (err) {
-			console.log(err);
+			alert(err);
 		}
 	}
 

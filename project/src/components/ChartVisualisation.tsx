@@ -57,7 +57,7 @@ function ChartVisualisation({data,setMode,addSave,setShowFilter,title,metrics}) 
 			<div className='my-auto flex justify-center'>
 				<div className='relative border border-gray-300 rounded-lg shadow-md bg-blue-50 rotate-270 origin-center'>
 					<select onChange={(e)=>setYAxis(e.target.value)} className='appearance-none outline-none pl-1 pr-6' id='y-axis' onChange={(e)=>setYAxis(e.target.value)}>
-						<option>y-axis</option>
+						<option>{saving ? yAxis : 'y-axis'}</option>
 						{metrics.map(
 							(h) => (
 									<option>{h}</option>
@@ -70,7 +70,6 @@ function ChartVisualisation({data,setMode,addSave,setShowFilter,title,metrics}) 
 	            </div>
 			</div>
 			<div className='overflow-scroll'>
-				{console.log(data.map((d)=>d['properties']['name']))}
 				{chartType in charts ?
 					<Chart
 						data={{
@@ -109,7 +108,7 @@ function ChartVisualisation({data,setMode,addSave,setShowFilter,title,metrics}) 
 			<div className='row-start-2 col-start-2 flex justify-center'>
 				<div className='relative border border-gray-300 rounded-lg shadow-md'>
 					<select className='appearance-none outline-none pl-1 pr-6' id='x-axis' onChange={(e)=>setXAxis(e.target.value)}>
-						<option>x-axis</option>
+						<option>{saving? xAxis:'x-axis'}</option>
 						{data[0]?.id && <option>Feature ID</option>}
 						{metrics.map(
 							(h) => (

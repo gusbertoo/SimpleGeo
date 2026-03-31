@@ -56,7 +56,7 @@ function BrowseMapVisual({geo,setMode,addSave,title,setShowFilter,metrics}) {
 
     const colour = (nv) => {
         if (isNaN(nv)) return null;
-        return `rgb(${200}, ${180*(1-nv)}, ${((1-nv)*110)+80})`;
+        return `rgb(${200}, ${190*(1-nv)}, ${((1-nv)*110)+80})`;
     }
 
     const style = (f) => {

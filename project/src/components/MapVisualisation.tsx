@@ -1,6 +1,19 @@
 import { MapContainer, TileLayer,GeoJSON, useMapEvents } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
 import {useState, useEffect, useRef} from 'react'
+
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerRetina from 'leaflet/dist/images/marker-icon-2x.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+delete L.Icon.Default.prototype._getIconUrl;
+
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: markerRetina,
+    iconUrl: markerIcon,
+    shadowUrl: markerShadow,
+});
 
 function MapDragHandler({ setDragging }) { /* allows for dragging over map control div */
     useMapEvents({
@@ -64,7 +77,7 @@ function MapVisualisation({geo, metric, geos, presetGeoID, getPresetGeo, presetD
                 </div>
                 <div className='grid gap-2 grid-cols-2'>
                     <label className='bg-white rounded-md cursor-pointer inline-block text-center border border-gray-300 hover:border-gray-500'>Import
-                        <input type='file' className='hidden' onChange={(f)=>{setFile(f.target.files[0]); e.target.value = null}}/>
+                        <input type='file' className='hidden' onChange={(f)=>{setFile(f.target.files[0]); f.target.value = null}}/>
                     </label>
                     <button className={`bg-white cursor-pointer rounded-md border border-gray-300 hover:border-gray-500`} onClick={()=>save()}>Save</button>
                 </div>

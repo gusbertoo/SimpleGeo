@@ -50,6 +50,7 @@ function CreatePage() {
 		setData({});
 		setPresetData(null);
 		setShowClear(false);
+		window.dispatchEvent(new Event("resize"));
     }
 
     const getPresetGeo = (id) => {
@@ -182,13 +183,22 @@ function CreatePage() {
         	fd.append('geodata', JSON.stringify(preset));
         	const response = await axios.post('http://localhost:8000/backend/upload-preset',fd,);
         } catch (err) {
-        	console.log(err);
+        	alert(err);
         }
 	};
 
 	useEffect(() => {
 		if (!file) return;
 		(async () => {
+			if (file) {
+	            const ext = file['name'].split('.').pop().toLowerCase(); /* get file extension to check, toLower() ensures all the same case- i.e. json and JSON treated the same */
+	            const acceptable = ['json', 'csv','geojson','geo+json']
+	            if (!acceptable.includes(ext)) return alert(ext + ' is not supported. Supported file types: JSON, CSV, GeoJSON');
+	            const maxSize = 5 * 1024 * 1024;
+			    if (file.size > maxSize) {
+			        return alert(`File is too large (${(file.size / 1024 / 1024).toFixed(2)} MB). Maximum allowed size is 5 MB.`);
+			    }
+	        }
 			try {
 		        const fd = new FormData();
 		        fd.append('file', file);
@@ -196,7 +206,7 @@ function CreatePage() {
 		        setGeo(response.data.geo);
 		        setData(response.data.data);
 		    } catch (err) {
-		    	console.log(err);
+		    	alert(err);
 		    }
     	})();
 	}, [file]);
