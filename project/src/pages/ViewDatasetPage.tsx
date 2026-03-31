@@ -88,7 +88,7 @@ function ViewDatasetPage() {
     }
     
     useEffect(() => {
-        fetch(`http://localhost:8000/backend/${curr_set_id}`)
+        fetch(`http://localhost:8000/backend/get-dataset/${curr_set_id}`)
             .then(r => r.json())
             .then(d => {
                 if (d[0]['public'] == false) authCheck(d[0]['set_id']);
