@@ -10,7 +10,7 @@ function Dataset({dataset}) {
       try {
         const fd = new FormData();
         fd.append('id',dataset.set_id);
-        const response = await axios.post('http://localhost:8000/backend//update-views',fd,);
+        const response = await axios.post('http://localhost:8000/backend/update-views',fd,);
       } catch (err) {
         alert(err);
       }
